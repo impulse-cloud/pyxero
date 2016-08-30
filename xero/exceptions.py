@@ -94,9 +94,13 @@ class XeroNotImplemented(XeroException):
 class XeroRateLimitExceeded(XeroException):
     # HTTP 503 - Rate limit exceeded
     def __init__(self, response, payload):
-        self.errors = [payload['oauth_problem'][0]]
-        self.problem = self.errors[0]
-        super(XeroRateLimitExceeded, self).__init__(response, payload['oauth_problem_advice'][0])
+        try:
+            self.errors = [payload['oauth_problem'][0]]
+            self.problem = self.errors[0]
+            super(XeroRateLimitExceeded, self).__init__(response, payload['oauth_problem_advice'][0])
+        except KeyError:
+            # It's possible to get a 503 error which doesn't have 'oauth_problem' in the payload
+            super(XeroRateLimitExceeded, self).__init__(response, response.text)
 
 
 class XeroNotAvailable(XeroException):
